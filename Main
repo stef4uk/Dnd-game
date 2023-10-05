@@ -1,0 +1,81 @@
+import random
+
+class Creature:
+    def __init__(self, attack, defense, health, damage_range):
+        self.attack = attack
+        self.defense = defense
+        self.health = health
+        self.max_health = health
+        self.damage_range = damage_range
+        self.damage_modifier = 0.0
+
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health < 0:
+            self.health = 0
+            print(f"{self.__class__.__name__} is dead!")
+        else:
+            print(f"{self.__class__.__name__} took {damage} damage and has {self.health} health left.")
+
+    def is_alive(self):
+        return self.health > 0
+
+    def heal(self):
+        if self.health == self.max_health:
+            print("Already at max health!")
+        else:
+            heal_amount = int(self.max_health * 0.3)
+            print(f"Healing {heal_amount} health!")
+            self.health += heal_amount
+            if self.health > self.max_health:
+                self.health = self.max_health
+
+    def calculate_damage_modifier(self, target):
+        self.damage_modifier = self.attack - target.defense + 1
+        if self.damage_modifier < 0:
+            self.damage_modifier = 0.0
+
+    def attack_creature(self, target):
+        self.calculate_damage_modifier(target)
+        dice = [random.randint(1, 6) for _ in range(int(self.damage_modifier))]
+        print(f"{self.__class__.__name__} rolls {dice} for attack.")
+        if 5 in dice or 6 in dice:
+            damage_dealt = random.randint(*self.damage_range)
+            print(f"{self.__class__.__name__} hits for {damage_dealt} damage!")
+            target.take_damage(damage_dealt)
+        else:
+            print(f"{self.__class__.__name__} misses!")
+
+
+class Player(Creature):
+    def __init__(self, attack, defense, health, damage_range):
+        super().__init__(attack, defense, health, damage_range)
+
+    def heal(self):
+        super().heal()
+        print(f"{self.__class__.__name__} has {self.health} health left.")
+
+
+class Monster(Creature):
+    def __init__(self, attack, defense, health, damage_range):
+        super().__init__(attack, defense, health, damage_range)
+
+
+if __name__ == "__main__":
+    player = Player(10, 5, 50, (1, 6))
+    monster = Monster(10, 5, 50, (1, 6))
+
+    while player.is_alive() and monster.is_alive():
+        print("Player's turn!")
+        player.attack_creature(monster)
+        if not monster.is_alive():
+            break
+        print("Monster's turn!")
+        monster.attack_creature(player)
+
+    if player.is_alive():
+        print("Player wins!")
+    elif monster.is_alive():
+        print("Monster wins!")
+    else:
+        print("It's a tie!")
